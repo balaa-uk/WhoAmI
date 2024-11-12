@@ -1,0 +1,132 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Balachandran_Kannan
+
+//@version=5
+
+indicator(title = 'Who Am I', shorttitle = 'WhoAmI', overlay=true)
+
+vwap_flag = input.bool(defval = false, title = 'VWAP', group='ON/OFF')
+//pivot_flag = input.bool(defval = false, title = 'Pivot', group='ON/OFF')
+rsi_flag = input.bool(defval = true, title = 'RSI Table', group='ON/OFF')
+ma_flag = input.bool(defval = true, title = 'Moving Average', group='ON/OFF')
+bb_flag = input.bool(defval = false, title = 'Bollinger Band', group='ON/OFF')
+
+ma_type = input.string(defval = 'EMA', title='Type', options = ['SMA', 'EMA', 'WMA', 'VWMA'], group='Moving Average Settings')
+src = input.source(defval = close,title='Source', group='Moving Average Settings')
+
+ma_small_length = input.int(12, minval=1, title='MA Small', group='Moving Average Settings')
+ma_big_length = input.int(21, minval=1, title='MA Big', group='Moving Average Settings')
+
+ma_uptrend_colour = input(color.green, title='Up Trend Colour', group='Moving Average Settings')
+ma_downtrend_colour = input(#ff0000, title='Down Trend Colour', group='Moving Average Settings')
+
+buy_sell_flag = input.bool(defval = false, title = 'Show Buy/Sell', group='Moving Average Settings')
+
+moving_average(source, length, MAtype) =>
+	switch MAtype
+		'SMA'                   => ta.sma(source, length)
+		'EMA'                   => ta.ema(source, length)
+		'WMA'                   => ta.wma(source, length)
+		'VWMA'                  => ta.vwma(source, length)
+
+ma_small = moving_average(src, ma_small_length, ma_type)
+ma_big = moving_average(src, ma_big_length, ma_type)
+
+// Rules For Up and Down EMA trends
+ma_uptrend = ma_small >= ma_big
+ma_downtrend = ma_small < ma_big
+
+// Plot on chart
+offsetAmount = 0.075
+plot(ma_flag? ma_small - offsetAmount:na, color=color.new(ma_uptrend ? ma_uptrend_colour : ma_downtrend_colour, 0), title='MA Small', style=plot.style_line, linewidth=1)
+plot(ma_flag? ma_big - offsetAmount:na, color=color.new(ma_uptrend ? ma_uptrend_colour : ma_downtrend_colour, 0), title='MA Big', style=plot.style_line, linewidth=2)
+
+if (ma_uptrend[1] and ma_downtrend and buy_sell_flag)
+    label.new(bar_index, high + ta.tr(true) * 0.5, text="Sell", style=label.style_label_down, color=#ff0000, textcolor=color.white, size=size.small)
+   
+if (ma_downtrend[1] and ma_uptrend and buy_sell_flag)
+    label.new(bar_index, low - ta.tr(true) * 0.25, text="Buy", style=label.style_label_up, color=color.green, textcolor=color.white, size=size.small)
+
+//BB 
+bb_length = input.int(20, minval=1, title='Length', group='Bollinger Band Settings')
+bb_ma_type = input.string(defval = 'EMA', title='Type', options = ['SMA', 'EMA', 'WMA', 'VWMA'], group='Bollinger Band Settings')
+bb_src = input.source(defval = close,title='Source', group='Bollinger Band Settings')
+
+base = moving_average(src, bb_length, bb_ma_type)
+dev = 2.0 * ta.stdev(src, bb_length)
+bb_upper = base + dev
+bb_lower = base - dev
+plot(bb_flag? base:na, "Base", color=bb_flag ? #2962FF:na, offset = 0)
+p1 = plot(bb_upper, "Upper", color=bb_flag ? #F23645:na, offset = 0)
+p2 = plot(bb_lower, "Lower", color=bb_flag ? #089981:na, offset = 0)
+fill(p1, p2, title = "Background", color=bb_flag ? color.rgb(33, 150, 243, 95) : na)
+
+//VWAP
+vwapLineWidth = input.int(defval = 1, options = [1,2,3,4], title = "Width", group="VWAP Settings")
+vwapLineColor = input.color(defval = color.green, title = "Color", group="VWAP Settings")
+vwapBands = input.bool(defval = true, title = "VWAP Upper and Lower Bands", group="VWAP Settings")
+vwap_time = input.string(defval = '1D', options = ['1D','1W','1M'], title='VWAP Anchor', group="VWAP Settings")
+stdevMultiplierInput = 1.0
+anchor = timeframe.change(vwap_time)
+[vwap, upper, lower] = ta.vwap(open, anchor, stdevMultiplierInput)
+middleLine = plot(vwap_flag ? vwap : na, color=color.blue, linewidth = vwapLineWidth)
+upperBand = plot(vwapBands and vwap_flag ? upper : na, color = vwapLineColor, linewidth = vwapLineWidth) // VWAP upper band
+lowerBand = plot(vwapBands and vwap_flag ? lower : na, color = vwapLineColor, linewidth = vwapLineWidth) // VWAP lower band
+fill(upperBand, middleLine, title="Bands Fill #1", color= color.new(color.green, 95), display = vwap_flag and vwapBands ? display.all : display.none)
+fill(middleLine, lowerBand, title="Bands Fill #1", color= color.new(color.green, 95), display = vwap_flag and vwapBands ? display.all : display.none)
+
+
+// RSI length
+rsiLength = input.int(14, title="RSI Length", group='RSI Settings')
+rsi_15M = input.bool(defval = false,title = '15',inline='rsi',group='RSI Settings')
+rsi_30M = input.bool(defval = false,title = '30',inline='rsi',group='RSI Settings')
+rsi_1H = input.bool(defval = false,title = '1H',inline='rsi',group='RSI Settings')
+rsi_4H = input.bool(defval = true,title = '4H',inline='rsi',group='RSI Settings')
+rsi_1D = input.bool(defval = true,title = '1D',inline='rsi',group='RSI Settings')
+rsi_1W = input.bool(defval = true,title = '1W',inline='rsi',group='RSI Settings')
+rsi_1M = input.bool(defval = true,title = '1M',inline='rsi',group='RSI Settings')
+
+// Calculate RSI values for different timeframes
+rsi15M = request.security(syminfo.tickerid, "15", ta.rsi(close, rsiLength))
+rsi30M = request.security(syminfo.tickerid, "30", ta.rsi(close, rsiLength))
+rsi1H = request.security(syminfo.tickerid, "60", ta.rsi(close, rsiLength))
+rsi4H = request.security(syminfo.tickerid, "240", ta.rsi(close, rsiLength)) // 240 minutes = 4 hours
+rsi1D = request.security(syminfo.tickerid, "D", ta.rsi(close, rsiLength))
+rsi1W = request.security(syminfo.tickerid, "W", ta.rsi(close, rsiLength))
+rsi1M = request.security(syminfo.tickerid, "M", ta.rsi(close, rsiLength))
+
+// Create a table and populate it with RSI values
+var table rsiTable = table.new(position.top_right, 2, 8, border_width = 1)
+
+if rsi_flag
+    if bar_index == 0
+        table.cell(rsiTable, 0, 0, "Timeframe", text_color=color.white, bgcolor=color.navy)
+        table.cell(rsiTable, 1, 0, "RSI", text_color=color.white, bgcolor=color.navy)
+
+    // Update table values
+    if rsi_15M
+        table.cell(rsiTable, 0, 1, "15", text_color=color.white,bgcolor=color.navy)
+        table.cell(rsiTable, 1, 1, str.tostring(math.round(rsi15M), "#.##"), text_color= color.white, bgcolor = math.round(rsi1H) > 50 ? color.green : #ff0000)
+
+    if rsi_30M
+        table.cell(rsiTable, 0, 2, "30", text_color=color.white,bgcolor=color.navy)
+        table.cell(rsiTable, 1, 2, str.tostring(math.round(rsi30M), "#.##"), text_color= color.white, bgcolor = math.round(rsi1H) > 50 ? color.green : #ff0000)
+        
+    if rsi_1H
+        table.cell(rsiTable, 0, 3, "1H", text_color=color.white,bgcolor=color.navy)
+        table.cell(rsiTable, 1, 3, str.tostring(math.round(rsi1H), "#.##"), text_color= color.white, bgcolor = math.round(rsi1H) > 50 ? color.green : #ff0000)
+
+    if rsi_4H
+        table.cell(rsiTable, 0, 4, "4H", text_color=color.white,bgcolor=color.navy)
+        table.cell(rsiTable, 1, 4, str.tostring(math.round(rsi4H), "#.##"), text_color=color.white,bgcolor = math.round(rsi4H) > 50 ? color.green : #ff0000)
+
+    if rsi_1D
+        table.cell(rsiTable, 0, 5, "D", text_color=color.white,bgcolor=color.navy)
+        table.cell(rsiTable, 1, 5, str.tostring(math.round(rsi1D), "#.##"), text_color=color.white,bgcolor = math.round(rsi1D) > 50 ? color.green : #ff0000)
+
+    if rsi_1W
+        table.cell(rsiTable, 0, 6, "W", text_color=color.white,bgcolor=color.navy)
+        table.cell(rsiTable, 1, 6, str.tostring(math.round(rsi1W), "#.##"), text_color = color.white, bgcolor = math.round(rsi1W)> 50 ? color.green : #ff0000)
+    if rsi_1M
+        table.cell(rsiTable, 0, 7, "M", text_color=color.white,bgcolor=color.navy)
+        table.cell(rsiTable, 1, 7, str.tostring(math.round(rsi1M), "#.##"), text_color = color.white, bgcolor = math.round(rsi1M)> 50 ? color.green : #ff0000)
