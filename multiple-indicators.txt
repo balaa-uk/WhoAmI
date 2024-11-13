@@ -106,11 +106,11 @@ if rsi_flag
     // Update table values
     if rsi_15M
         table.cell(rsiTable, 0, 1, "15", text_color=color.white,bgcolor=color.navy)
-        table.cell(rsiTable, 1, 1, str.tostring(math.round(rsi15M), "#.##"), text_color= color.white, bgcolor = math.round(rsi1H) > 50 ? color.green : #ff0000)
+        table.cell(rsiTable, 1, 1, str.tostring(math.round(rsi15M), "#.##"), text_color= color.white, bgcolor = math.round(rsi15M) > 50 ? color.green : #ff0000)
 
     if rsi_30M
         table.cell(rsiTable, 0, 2, "30", text_color=color.white,bgcolor=color.navy)
-        table.cell(rsiTable, 1, 2, str.tostring(math.round(rsi30M), "#.##"), text_color= color.white, bgcolor = math.round(rsi1H) > 50 ? color.green : #ff0000)
+        table.cell(rsiTable, 1, 2, str.tostring(math.round(rsi30M), "#.##"), text_color= color.white, bgcolor = math.round(rsi30M) > 50 ? color.green : #ff0000)
         
     if rsi_1H
         table.cell(rsiTable, 0, 3, "1H", text_color=color.white,bgcolor=color.navy)
