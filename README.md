@@ -26,7 +26,7 @@ This script enables multiple indicators to be used with TradingView's free accou
 
 # How to Use it
 
-1. In TradingView go to Pine Editor => Open => Click New Indicator.
+1. In TradingView go to Pine Editor.
 2. Copy & Paste the code
 3. Name it whatever you like and save.
 
