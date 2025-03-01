@@ -32,4 +32,4 @@ This script enables multiple indicators to be used with TradingView's free accou
 
 ![{995669A9-E158-4B0A-B1A7-F03C4E8DE400}](https://github.com/user-attachments/assets/f4e2d4b7-ab88-4e98-9879-7ab80115cca0)
 
-Now you have an indicator that can be used.
+Now you have an indicator that has multiple indicators in it. 
